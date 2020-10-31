@@ -3,8 +3,15 @@ project(MLBoardLib)
 get_filename_component(MLBoardLibDir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 set(MLBoardLibSources
-    ${MLBoardLibDir}/Board.hpp
-    ${MLBoardLibDir}/Board.cpp
+    ${MLBoardLibDir}/Types.hpp
+    ${MLBoardLibDir}/Scheduler.hpp
+    ${MLBoardLibDir}/Scheduler.ipp
+    ${MLBoardLibDir}/Scheduler.cpp
+    ${MLBoardLibDir}/HardwareModule.ipp
+    ${MLBoardLibDir}/HardwareModule.cpp
+    ${MLBoardLibDir}/NetworkModule.hpp
+    ${MLBoardLibDir}/NetworkModule.ipp
+    ${MLBoardLibDir}/NetworkModule.cpp
 )
 
 add_library(${CMAKE_PROJECT_NAME} ${MLBoardLibSources})

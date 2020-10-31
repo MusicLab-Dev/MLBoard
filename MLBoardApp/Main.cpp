@@ -1,20 +1,24 @@
 /**
- * @ Author: Matthieu Moinvaziri
- * @ Description: Board entry point
+ * @ Author: Paul Creze
+ * @ Description: Program entry
  */
+
 
 #include <iostream>
 
-#include <MLBoard/Board.hpp>
+#include "Scheduler.hpp"
 
-int main(void)
+int main(const int argc, const char * const * const argv)
 {
     try {
-        ML::Board board;
-
-        board.run();
+        std::vector<std::string> arguments(argc - 1);
+        for (auto i = 1; i < argc; ++i)
+            arguments.emplace_back(argv[i]);
+        Scheduler scheduler(std::move(arguments));
+        scheduler.run();
         return 0;
     } catch (const std::exception &e) {
-        std::cerr << "\nAn error occured:\n\t" << e.what() << std::endl;
+        std::cerr << "An error occured: " << e.what() << std::endl;
+        return 1;
     }
 }

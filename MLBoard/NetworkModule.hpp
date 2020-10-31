@@ -1,48 +1,65 @@
-/*
-** EPITECH PROJECT, 2020
-** board_implementation
-** File description:
-** NetworkModule
-*/
+/**
+ * @ Author: Paul Creze
+ * @ Description: Network module
+ */
 
 #pragma once
 
-#include <vector> // the use of vector will be replaced by Core::FlatVector & Core::RingBuffer
+#include <MLBoard/FlatVector.hpp>
+#include <MLProtocol/Protocol.hpp>
 
 #include "Types.hpp"
-
 #include "Module.hpp"
-#include "Protocol.hpp"
 
-class NetworkModule : Module
+namespace Core // TO DELETE LATER
 {
-    struct Client {
-        Protocol::BoardID id;
-        Socket socket;
-        std::vector<Client> clients;
+    template<typename Type>
+    using RingBuffer = std::vector<Type>;
+}
 
-        char padding[4];
+/** @brief Board module responsible of network communication */
+class alignas(32) NetworkModule : public Module
+{
+public:
+    /** @brief Size of the ring buffer cache */
+    static constexpr std::uint32_t RingBufferSize { 4096 };
+
+    /** @brief Data of a connected client */
+    struct alignas(16) Client
+    {
+        Protocol::BoardID id;
+        Net::Socket socket;
+        Core::FlatVector<Client> clients;
     };
 
-    public:
-        NetworkModule(void);
-        ~NetworkModule(void);
+    /** @brief Construct the network module */
+    NetworkModule(void);
 
-        void tick(Scheduler &scheduler);
-        void discover(Scheduler &scheduler);
+    /** @brief Destruct the network module */
+    ~NetworkModule(void);
 
-        void write(const std::uint8_t *data, std::size_t size);
 
-    private:
-        Protocol::BoardID _boardID = 0;
-        Protocol::NodeDistance _nodeDistance = 0;
-        Protocol::ConnectionType _connectionType = Protocol::ConnectionType::None;
+    /** @brief Tick called at tick rate */
+    void tick(Scheduler &scheduler) noexcept;
 
-        Socket _usbBroadcastSocket = -1;
-        Socket _masterSocket = -1;
+    /** @brief Discover called at discover rate */
+    void discover(Scheduler &scheduler) noexcept;
 
-        char _padding[2];
 
-        std::vector<Client> _clients;
-        std::vector<std::uint8_t> _buffer;
+    /** @brief Tries to add data to the ring buffer */
+    [[nodiscard]] bool write(const std::uint8_t *data, std::size_t size) noexcept;
+
+private:
+    Protocol::BoardID _boardID { 0u };
+    alignas(2) Protocol::NodeDistance _nodeDistance { 0u };
+    alignas(2) Protocol::ConnectionType _connectionType { Protocol::ConnectionType::None };
+
+    Net::Socket _usbBroadcastSocket { -1 };
+    Net::Socket _masterSocket { -1 };
+
+    Core::FlatVector<Client> _clients;
+    Core::RingBuffer<std::uint8_t, RingBufferSize> _buffer;
 };
+
+static_assert(sizeof(NetworkModule) == 32u, "NetworkModule must take 32 bytes");
+static_assert(alignas(NetworkModule) == 32u, "NetworkModule must be aligned to 32 bytes");

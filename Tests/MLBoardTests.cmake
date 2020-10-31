@@ -3,7 +3,7 @@ project(MLBoardTests)
 set(MLBoardTestsDir ${MLBoardDir}/Tests)
 
 set(MLBoardTestsSources
-    ${MLBoardTestsDir}/tests_Board.cpp
+    ${MLBoardTestsDir}/tests_Scheduler.cpp
 )
 
 add_executable(${CMAKE_PROJECT_NAME} ${MLBoardTestsSources})

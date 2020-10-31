@@ -1,27 +1,38 @@
-/*
-** EPITECH PROJECT, 2020
-** board_implementation
-** File description:
-** HardwareModule
-*/
+/**
+ * @ Author: Paul Creze
+ * @ Description: Hardware module
+ */
 
 #pragma once
 
-#include <vector> // the use of vector will be replaced by Core::FlatVector
+#include <MLCore/FlatVector.hpp>
+#include <MLProtocol/Protocol.hpp>
 
 #include "Module.hpp"
-#include "Protocol.hpp"
 
-class HardwareModule : Module
+class Scheduler;
+
+/** @brief Board module responsible of hardware communication */
+class alignas(32) HardwareModule : public Module
 {
-    public:
-        HardwareModule(void);
-        ~HardwareModule(void);
+public:
+    /** @brief Construct the hardware module */
+    HardwareModule(void) noexcept;
 
-        void tick(Scheduler &scheduler);
-        void discoverer(Scheduler &scheduler);
+    /** @brief Destruct the hardware module */
+    ~HardwareModule(void) noexcept;
 
-    private:
-        std::vector<Protocol::Control> _controls;
-        std::uint32_t _multiplexers;
+
+    /** @brief Tick called at tick rate */
+    void tick(Scheduler &scheduler) noexcept;
+
+    /** @brief Discover called at discover rate */
+    void discover(Scheduler &scheduler) noexcept;
+
+private:
+    Core::FlatVector<Protocol::Control> _controls {};
+    std::uint32_t _multiplexers { 0 };
 };
+
+static_assert(sizeof(HardwareModule) == 32u, "HardwareModule must take 32 bytes");
+static_assert(alignas(HardwareModule) == 32u, "HardwareModule must be aligned to 32 bytes");
