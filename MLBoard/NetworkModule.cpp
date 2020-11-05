@@ -5,12 +5,12 @@
 
 #include "Scheduler.hpp"
 
-NetworkModule::NetworkModule(void) noexcept
+NetworkModule::NetworkModule(void)
 {
 
 }
 
-NetworkModule::~NetworkModule(void) noexcept
+NetworkModule::~NetworkModule(void)
 {
 
 }

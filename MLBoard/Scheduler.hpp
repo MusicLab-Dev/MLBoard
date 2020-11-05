@@ -6,6 +6,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "Types.hpp"
 
@@ -13,7 +14,7 @@
 #include "NetworkModule.hpp"
 
 /** @brief The scheduler is responsible to coordinate each module in time */
-class alignas(96) Scheduler
+class alignas(CacheLineSize * 4) Scheduler
 {
 public:
     /** @brief Global connection state */
@@ -54,7 +55,7 @@ public:
     [[nodiscard]] NetworkModule &networkModule(void) noexcept { return _networkModule; }
 
 private:
-    struct alignas(32)
+    struct alignas(CacheLineSize)
     {
         State _state { State::Disconnected };
         Chrono::Timestamp _timestamp { 0u };
@@ -65,8 +66,8 @@ private:
     NetworkModule _networkModule;
 };
 
-static_assert(sizeof(Scheduler) == 96u, "Scheduler must take 96 bytes");
-static_assert(alignas(Scheduler) == 96u, "Scheduler must be aligned to 96 bytes");
+static_assert(sizeof(Scheduler) == CacheLineSize * 4, "Scheduler must take 4 cachelines");
+static_assert(alignof(Scheduler) == CacheLineSize * 4, "Scheduler must be aligned to 4 cachelins");
 
 #include "HardwareModule.ipp"
 #include "NetworkModule.ipp"

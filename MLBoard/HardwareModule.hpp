@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include <MLCore/FlatVector.hpp>
-#include <MLProtocol/Protocol.hpp>
+#include "MLCore/FlatVector.hpp"
+#include "MLProtocol/Protocol.hpp"
 
 #include "Module.hpp"
 
 class Scheduler;
 
 /** @brief Board module responsible of hardware communication */
-class alignas(32) HardwareModule : public Module
+class alignas(CacheLineSize) HardwareModule : public Module
 {
 public:
     /** @brief Construct the hardware module */
@@ -34,5 +34,5 @@ private:
     std::uint32_t _multiplexers { 0 };
 };
 
-static_assert(sizeof(HardwareModule) == 32u, "HardwareModule must take 32 bytes");
-static_assert(alignas(HardwareModule) == 32u, "HardwareModule must be aligned to 32 bytes");
+static_assert(sizeof(HardwareModule) == CacheLineSize, "HardwareModule must take CacheLineSize bytes");
+static_assert(alignof(HardwareModule) == CacheLineSize, "HardwareModule must be aligned to CacheLineSize bytes");

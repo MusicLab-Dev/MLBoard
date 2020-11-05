@@ -13,5 +13,5 @@ TEST(Scheduler, InitDestroy)
     Scheduler(std::vector<std::string> {});
 
     // Invalid parameters
-    ASSERT_TRHOW(Scheduler(std::vector<std::string> { "dummy parameter" }));
+    ASSERT_ANY_THROW(Scheduler(std::vector<std::string> { "dummy parameter" }));
 }

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "System.hpp"
 #include "Types.hpp"
 
 /** @brief Abstraction of a board module */
@@ -30,4 +31,4 @@ private:
 };
 
 static_assert(sizeof(Module) == 8u, "Module must take 8 bytes");
-static_assert(alignas(Module) == 8u, "Module must be aligned to 8 bytes");
+static_assert(alignof(Module) == 8u, "Module must be aligned to 8 bytes");

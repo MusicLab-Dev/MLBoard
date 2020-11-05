@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "Scheduler.hpp"
+#include <MLBoard/Scheduler.hpp>
 
 int main(const int argc, const char * const * const argv)
 {

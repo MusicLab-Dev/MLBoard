@@ -5,31 +5,34 @@
 
 #pragma once
 
-#include <MLBoard/FlatVector.hpp>
-#include <MLProtocol/Protocol.hpp>
+#include "MLCore/FlatVector.hpp"
+#include "MLCore/Vector.hpp"
+#include "MLProtocol/Protocol.hpp"
 
 #include "Types.hpp"
 #include "Module.hpp"
 
-namespace Core // TO DELETE LATER
-{
-    template<typename Type>
-    using RingBuffer = std::vector<Type>;
-}
+// namespace Core // TO DELETE LATER
+// {
+//     template<typename Type>
+//     using RingBuffer = std::vector<Type>;
+// }
 
 /** @brief Board module responsible of network communication */
-class alignas(32) NetworkModule : public Module
+class alignas(CacheLineSize) NetworkModule : public Module
 {
 public:
     /** @brief Size of the ring buffer cache */
     static constexpr std::uint32_t RingBufferSize { 4096 };
 
     /** @brief Data of a connected client */
-    struct alignas(16) Client
+    struct alignas(CacheLineSize / 2) Client
     {
+        ~Client(void) noexcept = default;
+
         Protocol::BoardID id;
         Net::Socket socket;
-        Core::FlatVector<Client> clients;
+        Core::Vector<Client, std::uint16_t> clients;
     };
 
     /** @brief Construct the network module */
@@ -57,9 +60,10 @@ private:
     Net::Socket _usbBroadcastSocket { -1 };
     Net::Socket _masterSocket { -1 };
 
-    Core::FlatVector<Client> _clients;
-    Core::RingBuffer<std::uint8_t, RingBufferSize> _buffer;
+    Core::Vector<Client, std::uint16_t> _clients;
+    Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
+    // Core::RingBuffer<std::uint8_t, RingBufferSize> _buffer;
 };
 
-static_assert(sizeof(NetworkModule) == 32u, "NetworkModule must take 32 bytes");
-static_assert(alignas(NetworkModule) == 32u, "NetworkModule must be aligned to 32 bytes");
+static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");
+static_assert(alignof(NetworkModule) == CacheLineSize, "NetworkModule must be aligned to cacheline size");
