@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <chrono>
 
 #include "Types.hpp"
 
@@ -31,14 +32,10 @@ public:
 
 
     /** @brief Run scheduler in blocking mode */
-    void run(void);
-
+    void run(Scheduler &instance);
 
     /** @brief Call tick on each module */
-    void tick(void) noexcept;
-
-    /** @brief Call discover on each module */
-    void discover(void) noexcept;
+    void tick(Scheduler &instance) noexcept;
 
 
     /** @brief Get the connection state */
@@ -59,7 +56,7 @@ private:
     {
         State _state { State::Disconnected };
         Chrono::Timestamp _timestamp { 0u };
-        Chrono::Duration _tickRate { 0u };
+        Chrono::Duration _tickRate { 1000000000 };
     };
 
     HardwareModule _hardwareModule;

@@ -15,7 +15,7 @@ int main(const int argc, const char * const * const argv)
         for (auto i = 1; i < argc; ++i)
             arguments.emplace_back(argv[i]);
         Scheduler scheduler(std::move(arguments));
-        scheduler.run();
+        scheduler.run(scheduler);
         return 0;
     } catch (const std::exception &e) {
         std::cerr << "An error occured: " << e.what() << std::endl;

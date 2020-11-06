@@ -5,18 +5,17 @@
 
 #pragma once
 
-#include "MLCore/FlatVector.hpp"
+#include <cstring>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "MLCore/Vector.hpp"
 #include "MLProtocol/Protocol.hpp"
 
 #include "Types.hpp"
 #include "Module.hpp"
-
-// namespace Core // TO DELETE LATER
-// {
-//     template<typename Type>
-//     using RingBuffer = std::vector<Type>;
-// }
 
 /** @brief Board module responsible of network communication */
 class alignas(CacheLineSize) NetworkModule : public Module
@@ -45,9 +44,12 @@ public:
     /** @brief Tick called at tick rate */
     void tick(Scheduler &scheduler) noexcept;
 
-    /** @brief Discover called at discover rate */
-    void discover(Scheduler &scheduler) noexcept;
+    /** @brief Discovery functions */
+    void discovery_scan(Scheduler &scheduler) noexcept;
+    void discovery_emit(Scheduler &scheduler) noexcept;
 
+    /** @brief Listen to connected boards in client mode */
+    void process_clients(Scheduler &scheduler) noexcept;
 
     /** @brief Tries to add data to the ring buffer */
     [[nodiscard]] bool write(const std::uint8_t *data, std::size_t size) noexcept;
@@ -62,7 +64,6 @@ private:
 
     Core::Vector<Client, std::uint16_t> _clients;
     Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
-    // Core::RingBuffer<std::uint8_t, RingBufferSize> _buffer;
 };
 
 static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");
