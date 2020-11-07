@@ -3,9 +3,9 @@
  * @ Description: Common types
  */
 
-#include <cstdint>
-
 #pragma once
+
+#include <cstdint>
 
 namespace Net
 {

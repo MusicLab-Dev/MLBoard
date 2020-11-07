@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 
 #include "MLCore/Vector.hpp"
 #include "MLProtocol/Protocol.hpp"
@@ -44,20 +45,32 @@ public:
     /** @brief Tick called at tick rate */
     void tick(Scheduler &scheduler) noexcept;
 
-    /** @brief Discovery functions */
+    /** @brief Discovery function that read and process near board message */
     void discovery_scan(Scheduler &scheduler) noexcept;
+
+    /** @brief Discovery function that emit on usb broadcast address */
     void discovery_emit(Scheduler &scheduler) noexcept;
 
-    /** @brief Listen to connected boards in client mode */
+    /** @brief Listen to connected boards that are in client mode */
     void process_clients(Scheduler &scheduler) noexcept;
 
     /** @brief Tries to add data to the ring buffer */
     [[nodiscard]] bool write(const std::uint8_t *data, std::size_t size) noexcept;
 
 private:
+
+    struct Endpoint
+    {
+        Net::IP ip_addr;
+        Protocol::ConnectionType conn_type;
+        Protocol::NodeDistance distance { 0u };
+    };
+
+    void analyze_usb_endpoints(std::vector<Endpoint> &usbEndpoints) noexcept;
+
     Protocol::BoardID _boardID { 0u };
-    alignas(2) Protocol::NodeDistance _nodeDistance { 0u };
     alignas(2) Protocol::ConnectionType _connectionType { Protocol::ConnectionType::None };
+    alignas(2) Protocol::NodeDistance _nodeDistance { 0u };
 
     Net::Socket _usbBroadcastSocket { -1 };
     Net::Socket _masterSocket { -1 };
@@ -66,5 +79,5 @@ private:
     Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
 };
 
-static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");
-static_assert(alignof(NetworkModule) == CacheLineSize, "NetworkModule must be aligned to cacheline size");
+// static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");
+// static_assert(alignof(NetworkModule) == CacheLineSize, "NetworkModule must be aligned to cacheline size");
