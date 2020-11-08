@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+#include <chrono>
 
 namespace Net
 {
@@ -28,7 +29,7 @@ namespace I2C
 namespace Chrono
 {
     /** @brief Timestamp in nanoseconds */
-    using Timestamp = std::uint32_t;
+    using Timestamp = std::chrono::steady_clock::time_point;
 
     /** @brief Time duration in nanoseconds */
     using Duration = std::uint32_t;

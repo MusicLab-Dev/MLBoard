@@ -22,6 +22,13 @@
 class alignas(CacheLineSize) NetworkModule : public Module
 {
 public:
+    struct Endpoint
+    {
+        Net::IP address { 0u };
+        Protocol::ConnectionType connectionType { Protocol::ConnectionType::None };
+        Protocol::NodeDistance distance { 0u };
+    };
+
     /** @brief Size of the ring buffer cache */
     static constexpr std::uint32_t RingBufferSize { 4096 };
 
@@ -29,11 +36,12 @@ public:
     struct alignas(CacheLineSize / 2) Client
     {
         ~Client(void) noexcept = default;
-
-        Protocol::BoardID id;
-        Net::Socket socket;
-        Core::Vector<Client, std::uint16_t> clients;
+    
+        Protocol::BoardID id { 0u };
+        Net::Socket socket { 0 };
+        Core::Vector<Client, std::uint16_t> clients {};
     };
+
 
     /** @brief Construct the network module */
     NetworkModule(void);
@@ -45,29 +53,13 @@ public:
     /** @brief Tick called at tick rate */
     void tick(Scheduler &scheduler) noexcept;
 
-    /** @brief Discovery function that read and process near board message */
-    void discovery_scan(Scheduler &scheduler) noexcept;
-
-    /** @brief Discovery function that emit on usb broadcast address */
-    void discovery_emit(Scheduler &scheduler) noexcept;
-
-    /** @brief Listen to connected boards that are in client mode */
-    void process_clients(Scheduler &scheduler) noexcept;
+    /** @brief Start discovery */
+    void discover(Scheduler &scheduler) noexcept;
 
     /** @brief Tries to add data to the ring buffer */
     [[nodiscard]] bool write(const std::uint8_t *data, std::size_t size) noexcept;
 
 private:
-
-    struct Endpoint
-    {
-        Net::IP ip_addr;
-        Protocol::ConnectionType conn_type;
-        Protocol::NodeDistance distance { 0u };
-    };
-
-    void analyze_usb_endpoints(std::vector<Endpoint> &usbEndpoints) noexcept;
-
     Protocol::BoardID _boardID { 0u };
     alignas(2) Protocol::ConnectionType _connectionType { Protocol::ConnectionType::None };
     alignas(2) Protocol::NodeDistance _nodeDistance { 0u };
@@ -77,6 +69,19 @@ private:
 
     Core::Vector<Client, std::uint16_t> _clients;
     Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
+
+
+    /** @brief Listen to connected boards that are in client mode */
+    void processClients(Scheduler &scheduler) noexcept;
+
+    /** @brief Discovery function that read and process near board message */
+    void discoveryScan(Scheduler &scheduler);
+
+    /** @brief Discovery function that emit on usb broadcast address */
+    void discoveryEmit(Scheduler &scheduler) noexcept;
+
+    /** @brief Analyse every available usb endpoints */
+    void analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoints) noexcept;
 };
 
 // static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");

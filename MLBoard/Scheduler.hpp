@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <string>
-#include <chrono>
 
 #include "Types.hpp"
 
@@ -32,10 +31,10 @@ public:
 
 
     /** @brief Run scheduler in blocking mode */
-    void run(Scheduler &instance);
+    void run(void);
 
     /** @brief Call tick on each module */
-    void tick(Scheduler &instance) noexcept;
+    void tick(void) noexcept;
 
 
     /** @brief Get the connection state */
@@ -55,7 +54,7 @@ private:
     struct alignas(CacheLineSize)
     {
         State _state { State::Disconnected };
-        Chrono::Timestamp _timestamp { 0u };
+        // Chrono::Timestamp _timestamp;
         Chrono::Duration _tickRate { 1000000000 };
     };
 
