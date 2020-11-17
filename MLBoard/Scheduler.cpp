@@ -19,33 +19,37 @@ Scheduler::~Scheduler(void)
 
 void Scheduler::run(void)
 {
-    constexpr auto ProcessDiscovery = [](Scheduler &scheduler, auto &mod, const auto currentTime) {
+    using namespace std::chrono;
 
-        const auto elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - mod.lastDiscoveryTimestamp()).count();
+    constexpr auto ProcessDiscovery = [](Scheduler &scheduler, auto &mod, auto &previousTime, const auto &currentTime) {
+
+        const auto elapsedTime = static_cast<std::size_t>(duration_cast<nanoseconds>(currentTime - previousTime).count());
 
         if (elapsedTime >= mod.discoveryRate()) {
-            mod.setLastDiscoveryTimestamp(currentTime);
+            previousTime = currentTime;
             mod.discover(scheduler);
         }
     };
 
     std::cout << "MLBoard running" << std::endl;
 
-    std::chrono::steady_clock::time_point prevTime = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point currentTime;
+    steady_clock::time_point previousTick {};
+    steady_clock::time_point previousHardwareDiscovery {};
+    steady_clock::time_point previousNetworkDiscovery {};
+    steady_clock::time_point currentTime;
 
     while (1) {
-        currentTime = std::chrono::steady_clock::now();
-
-        // Process tick of each module if needed
-        auto elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - prevTime).count();
-        if (elapsedTime > _tickRate) {
-            tick();
-            prevTime = currentTime;
-        }
+        currentTime = steady_clock::now();
 
         // Process discovery of each module if needed
-        ProcessDiscovery(*this, _hardwareModule, currentTime);
-        ProcessDiscovery(*this, _networkModule, currentTime);
+        ProcessDiscovery(*this, _hardwareModule, previousHardwareDiscovery, currentTime);
+        ProcessDiscovery(*this, _networkModule, previousNetworkDiscovery, currentTime);
+
+        // Process tick of each module if needed
+        const auto elapsedTime = static_cast<std::size_t>(duration_cast<nanoseconds>(currentTime - previousTick).count());
+        if (elapsedTime > _tickRate) {
+            tick();
+            previousTick = currentTime;
+        }
     }
 }

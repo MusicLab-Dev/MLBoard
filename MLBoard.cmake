@@ -2,10 +2,6 @@ project(MLBoard)
 
 get_filename_component(MLBoardDir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
-add_compile_options(
-#    -m32
-)
-
 include(${MLBoardDir}/MLBoard/MLBoardLib.cmake)
 include(${MLBoardDir}/MLBoardApp/MLBoardApp.cmake)
 

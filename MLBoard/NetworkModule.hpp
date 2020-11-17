@@ -34,7 +34,7 @@ public:
     static constexpr std::uint32_t RingBufferSize { 4096 };
 
     /** @brief Data of a connected client */
-    struct alignas(CacheLineSize / 2) Client
+    struct alignas_half_cacheline Client
     {
         ~Client(void) noexcept = default;
     
@@ -42,6 +42,8 @@ public:
         Net::Socket socket { 0 };
         Core::Vector<Client, std::uint16_t> clients {};
     };
+
+    static_assert_fit_half_cacheline(Client);
 
 
     /** @brief Construct the network module */
@@ -62,12 +64,11 @@ public:
 
 private:
     Protocol::BoardID _boardID { 0u };
-    alignas(2) Protocol::ConnectionType _connectionType { Protocol::ConnectionType::None };
-    alignas(2) Protocol::NodeDistance _nodeDistance { 0u };
+    Protocol::ConnectionType _connectionType { Protocol::ConnectionType::None };
+    Protocol::NodeDistance _nodeDistance { 0u };
 
     Net::Socket _usbBroadcastSocket { -1 };
     Net::Socket _masterSocket { -1 };
-
     Core::Vector<Client, std::uint16_t> _clients;
     Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
 
@@ -88,4 +89,4 @@ private:
     void initNewMasterConnection(const Endpoint &masterEndpoint, Scheduler &scheduler) noexcept;
 };
 
-static_assert_fit_cacheline(NetworkModule));
+static_assert_fit_cacheline(NetworkModule);

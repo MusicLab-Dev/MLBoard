@@ -34,7 +34,7 @@ public:
     void run(void);
 
     /** @brief Call tick on each module */
-    void tick(void) noexcept;_
+    void tick(void) noexcept;
 
 
     /** @brief Get the connection state */
@@ -61,8 +61,8 @@ private:
     NetworkModule _networkModule;
 };
 
-static_assert_sizeof(Scheduler, CacheLineSize * 4);
-static_assert_alignof(Scheduler, CacheLineSize * 4);
+static_assert_sizeof(Scheduler, Core::CacheLineSize * 4);
+static_assert_alignof(Scheduler, Core::CacheLineSize * 4);
 
 #include "HardwareModule.ipp"
 #include "NetworkModule.ipp"
