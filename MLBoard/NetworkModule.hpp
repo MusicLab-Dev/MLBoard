@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "MLCore/Vector.hpp"
 #include "MLProtocol/Protocol.hpp"
@@ -81,7 +82,10 @@ private:
     void discoveryEmit(Scheduler &scheduler) noexcept;
 
     /** @brief Analyse every available usb endpoints */
-    void analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoints) noexcept;
+    void analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoints, Scheduler &scheduler) noexcept;
+
+    /** @brief Init a new connection to a new master (server) endpoint */
+    void initNewMasterConnection(const Endpoint &masterEndpoint, Scheduler &scheduler) noexcept;
 };
 
 // static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");

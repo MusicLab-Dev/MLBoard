@@ -29,7 +29,9 @@ NetworkModule::NetworkModule(void)
         throw std::runtime_error(strerror(errno));
     if (setsockopt(_usbBroadcastSocket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) < 0)
         throw std::runtime_error(strerror(errno));
-    if (bind(_usbBroadcastSocket, (const struct sockaddr *)&usbBroadcastAddress, sizeof(usbBroadcastAddress)) < 0)
+    if (bind(_usbBroadcastSocket, 
+        reinterpret_cast<const struct sockaddr *>(&usbBroadcastAddress), 
+        sizeof(usbBroadcastAddress)) < 0)
         throw std::runtime_error(strerror(errno));
 }
 
@@ -54,58 +56,116 @@ void NetworkModule::discover(Scheduler &scheduler) noexcept
     discoveryScan(scheduler);
 }
 
-void NetworkModule::analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoints) noexcept
+void NetworkModule::initNewMasterConnection(const Endpoint &masterEndpoint, Scheduler &scheduler) noexcept
 {
-    std::cout << "Netork module analyzeUsbEndpoints function" << std::endl;
+    std::cout << "NetworkModule::initNewMasterConnection function" << std::endl;
+
+    if (_masterSocket) {
+        close(_masterSocket);
+        _masterSocket = -1;
+    }
+    _masterSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_masterSocket < 0) {
+        std::cout << "Error: initNewMasterConnection: socket: " << strerror(errno) << std::endl;
+        return;
+    }
+    struct sockaddr_in masterAddress = {
+        .sin_family = AF_INET,
+        .sin_port = htons(421),
+        .sin_addr = {
+            .s_addr = masterEndpoint.address
+        }
+    };
+    auto ret = connect(
+        _masterSocket, 
+        reinterpret_cast<const struct sockaddr *>(&masterAddress), 
+        sizeof(masterAddress)
+    );
+    if (ret < 0) {
+        std::cout << "Error: initNewMasterConnection: connect: " << strerror(errno) << std::endl;
+        return;
+    }
+    std::cout << "Connected to master" << std::endl;
+
+    std::cout << "Starting ID request procedure..." << std::endl;
+
+    Protocol::Packet request(Protocol::PacketID::IDResquest);
+    send(_masterSocket, &request, request.size(), 0);
+
+    Protocol::Packet response;
+    const auto size = read(_masterSocket, &response, sizeof(response));
+    std::cout << "response is " << size << "bytes" << std::endl;
+    // To continue
+
+    /* Only if ID assignment is done correctly */
+    _connectionType = masterEndpoint.connectionType;
+    _nodeDistance = masterEndpoint.distance;
+    scheduler.setState(Scheduler::State::Connected);
+}
+
+void NetworkModule::analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoints, Scheduler &scheduler) noexcept
+{
+    std::cout << "NetworkModule::analyzeUsbEndpoints function" << std::endl;
 
     std::size_t index = 0;
     std::size_t i = 0;
 
     for (const auto &endpoint : usbEndpoints) {
         if (usbEndpoints.at(index).connectionType != Protocol::ConnectionType::USB &&
-                endpoint.connectionType == Protocol::ConnectionType::USB) {
+            endpoint.connectionType == Protocol::ConnectionType::USB) {
             index = i;
         } else if (endpoint.distance < usbEndpoints.at(index).distance) {
             index = i;
         }
         i++;
     }
-    // Replace master endpoint if a better has been found
+    if (_connectionType != Protocol::ConnectionType::USB && 
+        usbEndpoints.at(index).connectionType == Protocol::ConnectionType::USB) {
+        std::cout << "New endpoint found for studio connection" << std::endl;
+        initNewMasterConnection(usbEndpoints.at(index), scheduler);
+    } else if (usbEndpoints.at(index).distance + 1 < _nodeDistance) {
+        std::cout << "New endpoint found for studio connection" << std::endl;
+        initNewMasterConnection(usbEndpoints.at(index), scheduler);
+    }
 }
 
 void NetworkModule::discoveryScan(Scheduler &scheduler)
 {
     std::cout << "Network module discoveryScan function" << std::endl;
 
-    sockaddr_in usbSenderAddress;
+    struct sockaddr_in usbSenderAddress;
     int usbSenderAddressLength = sizeof(usbSenderAddress);
-    std::vector<Endpoint> usbEndpoints;
+
     Protocol::DiscoveryPacket packet;
+    std::vector<Endpoint> usbEndpoints;
 
     while (1) {
         const auto size = ::recvfrom(
-            _usbBroadcastSocket,
+            _usbBroadcastSocket, 
             &packet, 
-            sizeof(Protocol::DiscoveryPacket),
+            sizeof(Protocol::DiscoveryPacket), 
             MSG_WAITALL | MSG_DONTWAIT, /* MSG_WAITALL wait for the entire message */
-            reinterpret_cast<sockaddr *>(&usbSenderAddress), 
+            reinterpret_cast<struct sockaddr *>(&usbSenderAddress), 
             reinterpret_cast<socklen_t *>(&usbSenderAddressLength)
         );
+        std::cout << "recvfrom size: " << size << std::endl;
 
-        if (size == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) { /* loop end condition, until read buffer is empty */
+        if (size < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) { /* loop end condition, until read buffer is empty */
             std::cout << "nothing remaining on the socket" << std::endl;
             if (scheduler.state() != Scheduler::State::Connected && !usbEndpoints.empty())
-                analyzeUsbEndpoints(usbEndpoints);
+                analyzeUsbEndpoints(usbEndpoints, scheduler);
             return;
-        } else if (size == -1) { /* recvfrom error */
+        } else if (size < 0) { /* recvfrom error */
             throw std::runtime_error(strerror(errno));
             return;
         }
 
-        if (packet.magicKey != Protocol::DiscoveryPacketMagicKey) // Discard unkown packets
+        if (packet.magicKey != Protocol::MusicLabMagicKey || /* ignoring unknow packets */
+            packet.boardID == _boardID) /* and self broadcasted packets */
+        {
+            std::cout << "ignoring packet" << std::endl;
             continue;
-
-        // Also check if this is our own discovery packet !!
+        }
 
         // [DEBUG START]
         char senderAddressString[100];
