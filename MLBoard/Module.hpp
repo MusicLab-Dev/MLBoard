@@ -5,11 +5,10 @@
 
 #pragma once
 
-#include "System.hpp"
 #include "Types.hpp"
 
 /** @brief Abstraction of a board module */
-class alignas(8) Module
+class alignas_cacheline_eighth Module
 {
 public:
     /** @brief Get the discovery rate duration */
@@ -30,6 +29,4 @@ private:
     Chrono::Timestamp _lastDiscoveryTimestamp { std::chrono::steady_clock::duration::zero() };
 };
 
-// static_assert(sizeof(Module) == 8u, "Module must take 8 bytes");
-// static_assert(alignof(Module) == 8u, "Module must be aligned to 8 bytes");
-// MUST FIX MODULE IS MORE THAN 8 BYTES SINCE TIME_POINT REPLACED TIMESTAMP
+static_assert_fit_eighth(Module);

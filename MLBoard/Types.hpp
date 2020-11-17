@@ -8,11 +8,13 @@
 #include <cstdint>
 #include <chrono>
 
+#include <MLCore/Utils.hpp>
+
 namespace Net
 {
     /** @brief Network IP address */
     using IP = std::uint32_t;
-    
+    _
     /** @brief Network port */
     using Port = std::uint16_t;
 
@@ -32,5 +34,5 @@ namespace Chrono
     using Timestamp = std::chrono::steady_clock::time_point;
 
     /** @brief Time duration in nanoseconds */
-    using Duration = std::uint32_t;
+    using Duration = std::size;t
 }

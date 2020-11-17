@@ -14,7 +14,7 @@
 #include "NetworkModule.hpp"
 
 /** @brief The scheduler is responsible to coordinate each module in time */
-class alignas(CacheLineSize * 4) Scheduler
+class alignas(Core::CacheLineSize * 4) Scheduler
 {
 public:
     /** @brief Global connection state */
@@ -34,7 +34,7 @@ public:
     void run(void);
 
     /** @brief Call tick on each module */
-    void tick(void) noexcept;
+    void tick(void) noexcept;_
 
 
     /** @brief Get the connection state */
@@ -51,10 +51,9 @@ public:
     [[nodiscard]] NetworkModule &networkModule(void) noexcept { return _networkModule; }
 
 private:
-    struct alignas(CacheLineSize)
+    struct alignas_cacheline
     {
         State _state { State::Disconnected };
-        // Chrono::Timestamp _timestamp;
         Chrono::Duration _tickRate { 1000000000 };
     };
 
@@ -62,8 +61,8 @@ private:
     NetworkModule _networkModule;
 };
 
-static_assert(sizeof(Scheduler) == CacheLineSize * 4, "Scheduler must take 4 cachelines");
-static_assert(alignof(Scheduler) == CacheLineSize * 4, "Scheduler must be aligned to 4 cachelins");
+static_assert_sizeof(Scheduler, CacheLineSize * 4);
+static_assert_alignof(Scheduler, CacheLineSize * 4);
 
 #include "HardwareModule.ipp"
 #include "NetworkModule.ipp"

@@ -13,14 +13,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "MLCore/Vector.hpp"
-#include "MLProtocol/Protocol.hpp"
+#include <MLCore/Vector.hpp>
+#include <MLProtocol/Protocol.hpp>
 
 #include "Types.hpp"
 #include "Module.hpp"
 
 /** @brief Board module responsible of network communication */
-class alignas(CacheLineSize) NetworkModule : public Module
+class alignas_cacheline NetworkModule : public Module
 {
 public:
     struct Endpoint
@@ -88,5 +88,4 @@ private:
     void initNewMasterConnection(const Endpoint &masterEndpoint, Scheduler &scheduler) noexcept;
 };
 
-// static_assert(sizeof(NetworkModule) == CacheLineSize, "NetworkModule must be the size of cacheline");
-// static_assert(alignof(NetworkModule) == CacheLineSize, "NetworkModule must be aligned to cacheline size");
+static_assert_fit_cacheline(NetworkModule));
