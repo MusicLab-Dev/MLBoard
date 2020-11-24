@@ -72,7 +72,6 @@ private:
     Core::Vector<Client, std::uint16_t> _clients;
     Core::Vector<std::uint8_t, std::uint16_t> _buffer; // To replace by ringbuffer
 
-
     /** @brief Listen to connected boards that are in client mode */
     void processClients(Scheduler &scheduler) noexcept;
 
