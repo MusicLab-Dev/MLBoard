@@ -37,7 +37,7 @@ public:
     struct alignas_half_cacheline Client
     {
         ~Client(void) noexcept = default;
-    
+
         Protocol::BoardID id { 0u };
         Net::Socket socket { 0 };
         Core::Vector<Client, std::uint16_t> clients {};

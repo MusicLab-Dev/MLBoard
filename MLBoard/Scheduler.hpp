@@ -25,7 +25,7 @@ public:
 
     /** @brief Construct the scheduler */
     Scheduler(std::vector<std::string> &&arguments);
-    
+
     /** @brief Destruct the scheduler */
     ~Scheduler(void);
 

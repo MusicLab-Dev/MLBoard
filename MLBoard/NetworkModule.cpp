@@ -12,7 +12,7 @@
 NetworkModule::NetworkModule(void)
 {
     std::cout << "NetworkModule constructor" << std::endl;
-    
+
     // defining broadcast address
     sockaddr_in usbBroadcastAddress {
         .sin_family = AF_INET,
@@ -29,8 +29,8 @@ NetworkModule::NetworkModule(void)
         throw std::runtime_error(strerror(errno));
     if (setsockopt(_usbBroadcastSocket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) < 0)
         throw std::runtime_error(strerror(errno));
-    if (bind(_usbBroadcastSocket, 
-        reinterpret_cast<const struct sockaddr *>(&usbBroadcastAddress), 
+    if (bind(_usbBroadcastSocket,
+        reinterpret_cast<const struct sockaddr *>(&usbBroadcastAddress),
         sizeof(usbBroadcastAddress)) < 0)
         throw std::runtime_error(strerror(errno));
 }
@@ -77,8 +77,8 @@ void NetworkModule::initNewMasterConnection(const Endpoint &masterEndpoint, Sche
         }
     };
     auto ret = connect(
-        _masterSocket, 
-        reinterpret_cast<const struct sockaddr *>(&masterAddress), 
+        _masterSocket,
+        reinterpret_cast<const struct sockaddr *>(&masterAddress),
         sizeof(masterAddress)
     );
     if (ret < 0) {
@@ -119,7 +119,7 @@ void NetworkModule::analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoint
         }
         i++;
     }
-    if (_connectionType != Protocol::ConnectionType::USB && 
+    if (_connectionType != Protocol::ConnectionType::USB &&
         usbEndpoints.at(index).connectionType == Protocol::ConnectionType::USB) {
         std::cout << "New endpoint found for studio connection" << std::endl;
         initNewMasterConnection(usbEndpoints.at(index), scheduler);
@@ -141,11 +141,11 @@ void NetworkModule::discoveryScan(Scheduler &scheduler)
 
     while (1) {
         const auto size = ::recvfrom(
-            _usbBroadcastSocket, 
-            &packet, 
-            sizeof(Protocol::DiscoveryPacket), 
+            _usbBroadcastSocket,
+            &packet,
+            sizeof(Protocol::DiscoveryPacket),
             MSG_WAITALL | MSG_DONTWAIT, /* MSG_WAITALL wait for the entire message */
-            reinterpret_cast<struct sockaddr *>(&usbSenderAddress), 
+            reinterpret_cast<struct sockaddr *>(&usbSenderAddress),
             reinterpret_cast<socklen_t *>(&usbSenderAddressLength)
         );
         std::cout << "recvfrom size: " << size << std::endl;
@@ -176,7 +176,7 @@ void NetworkModule::discoveryScan(Scheduler &scheduler)
 
         Endpoint endpoint {
             .address = usbSenderAddress.sin_addr.s_addr,
-            .connectionType = packet.connectionType, 
+            .connectionType = packet.connectionType,
             .distance = packet.distance
         };
         usbEndpoints.push_back(endpoint);
@@ -199,10 +199,10 @@ void NetworkModule::discoveryEmit(Scheduler &scheduler) noexcept
         }
     };
     ::sendto(
-        _usbBroadcastSocket, 
-        &packet, 
-        sizeof(Protocol::DiscoveryPacket), 
-        0, 
+        _usbBroadcastSocket,
+        &packet,
+        sizeof(Protocol::DiscoveryPacket),
+        0,
         reinterpret_cast<const sockaddr *>(&usbBroadcastAddress), sizeof(usbBroadcastAddress)
     );
 }
