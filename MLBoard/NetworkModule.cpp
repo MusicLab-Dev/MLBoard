@@ -16,23 +16,33 @@ NetworkModule::NetworkModule(void)
     // defining broadcast address
     sockaddr_in usbBroadcastAddress {
         .sin_family = AF_INET,
-        .sin_port = htons(420),
+        .sin_port = ::htons(420),
         .sin_addr = {
-            .s_addr = inet_addr("169.254.255.255")
+            .s_addr = ::inet_addr("169.254.255.255")
         }
     };
 
     // opening UDP broadcast socket
     int broadcast = 1;
-    _usbBroadcastSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    _usbBroadcastSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (_usbBroadcastSocket < 0)
-        throw std::runtime_error(strerror(errno));
-    if (setsockopt(_usbBroadcastSocket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) < 0)
-        throw std::runtime_error(strerror(errno));
-    if (bind(_usbBroadcastSocket,
-        reinterpret_cast<const struct sockaddr *>(&usbBroadcastAddress),
-        sizeof(usbBroadcastAddress)) < 0)
-        throw std::runtime_error(strerror(errno));
+        throw std::runtime_error(std::strerror(errno));
+    auto ret = ::setsockopt(
+        _usbBroadcastSocket,
+        SOL_SOCKET,
+        SO_BROADCAST,
+        &broadcast,
+        sizeof(broadcast)
+    );
+    if (ret < 0)
+        throw std::runtime_error(std::strerror(errno));
+    ret = ::bind(
+        _usbBroadcastSocket,
+        reinterpret_cast<const sockaddr *>(&usbBroadcastAddress),
+        sizeof(usbBroadcastAddress)
+    );
+    if (ret < 0)
+        throw std::runtime_error(std::strerror(errno));
 }
 
 NetworkModule::~NetworkModule(void)
@@ -44,7 +54,7 @@ void NetworkModule::tick(Scheduler &scheduler) noexcept
 {
     if (scheduler.state() != Scheduler::State::Connected)
         return;
-    std::cout << "Network module tick function" << std::endl;
+    std::cout << "NetworkModule::tick function" << std::endl;
     processClients(scheduler);
     // send hardware module data
 }
@@ -62,24 +72,24 @@ void NetworkModule::initNewMasterConnection(const Endpoint &masterEndpoint, Sche
     std::cout << "NetworkModule::initNewMasterConnection function" << std::endl;
 
     if (_masterSocket) {
-        close(_masterSocket);
+        ::close(_masterSocket);
         _masterSocket = -1;
     }
-    _masterSocket = socket(AF_INET, SOCK_STREAM, 0);
+    _masterSocket = ::socket(AF_INET, SOCK_STREAM, 0);
     if (_masterSocket < 0) {
         std::cout << "Error: initNewMasterConnection: socket: " << strerror(errno) << std::endl;
         return;
     }
-    struct sockaddr_in masterAddress = {
+    sockaddr_in masterAddress = {
         .sin_family = AF_INET,
-        .sin_port = htons(421),
+        .sin_port = ::htons(421),
         .sin_addr = {
             .s_addr = masterEndpoint.address
         }
     };
-    auto ret = connect(
+    auto ret = ::connect(
         _masterSocket,
-        reinterpret_cast<const struct sockaddr *>(&masterAddress),
+        reinterpret_cast<const sockaddr *>(&masterAddress),
         sizeof(masterAddress)
     );
     if (ret < 0) {
@@ -91,10 +101,10 @@ void NetworkModule::initNewMasterConnection(const Endpoint &masterEndpoint, Sche
     std::cout << "Starting ID request procedure..." << std::endl;
 
     Protocol::Packet request(Protocol::PacketID::IDResquest);
-    send(_masterSocket, &request, request.size(), 0);
+    ::send(_masterSocket, &request, request.size(), 0);
 
     Protocol::Packet response;
-    const auto size = read(_masterSocket, &response, sizeof(response));
+    const auto size = ::read(_masterSocket, &response, sizeof(response));
     std::cout << "response is " << size << "bytes" << std::endl;
     // to continue...
 
@@ -132,9 +142,9 @@ void NetworkModule::analyzeUsbEndpoints(const std::vector<Endpoint> &usbEndpoint
 
 void NetworkModule::discoveryScan(Scheduler &scheduler)
 {
-    std::cout << "Network module discoveryScan function" << std::endl;
+    std::cout << "NetworkModule::discoveryScan function" << std::endl;
 
-    struct sockaddr_in usbSenderAddress;
+    sockaddr_in usbSenderAddress;
     int usbSenderAddressLength = sizeof(usbSenderAddress);
 
     Protocol::DiscoveryPacket packet;
@@ -146,7 +156,7 @@ void NetworkModule::discoveryScan(Scheduler &scheduler)
             &packet,
             sizeof(Protocol::DiscoveryPacket),
             MSG_WAITALL | MSG_DONTWAIT,
-            reinterpret_cast<struct sockaddr *>(&usbSenderAddress),
+            reinterpret_cast<sockaddr *>(&usbSenderAddress),
             reinterpret_cast<socklen_t *>(&usbSenderAddressLength)
         );
         std::cout << "recvfrom size: " << size << std::endl;
@@ -158,7 +168,7 @@ void NetworkModule::discoveryScan(Scheduler &scheduler)
                 analyzeUsbEndpoints(usbEndpoints, scheduler);
             return;
         } else if (size < 0) {
-            throw std::runtime_error(strerror(errno));
+            throw std::runtime_error(std::strerror(errno));
             return;
         }
 
@@ -185,7 +195,7 @@ void NetworkModule::discoveryScan(Scheduler &scheduler)
 
 void NetworkModule::discoveryEmit(Scheduler &scheduler) noexcept
 {
-    std::cout << "Network module discoveryEmit function" << std::endl;
+    std::cout << "NetworkModule::discoveryEmit function" << std::endl;
 
     Protocol::DiscoveryPacket packet;
     packet.connectionType = _connectionType;
@@ -193,9 +203,9 @@ void NetworkModule::discoveryEmit(Scheduler &scheduler) noexcept
 
     sockaddr_in usbBroadcastAddress {
         .sin_family = AF_INET,
-        .sin_port = htons(420),
+        .sin_port = ::htons(420),
         .sin_addr = {
-            .s_addr = inet_addr("169.254.255.255")
+            .s_addr = ::inet_addr("169.254.255.255")
         }
     };
 

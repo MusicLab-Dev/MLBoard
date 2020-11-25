@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <chrono>
 
-#include <MLCore/Utils.hpp>
-
 namespace Net
 {
     /** @brief Network IP address */
